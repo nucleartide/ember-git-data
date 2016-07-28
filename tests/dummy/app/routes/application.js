@@ -26,7 +26,10 @@ export default Ember.Route.extend({
     })
     .catch(err => console.error(err.stack))
 
-    repo.deleteFile('machines/angelcity/base/machine.json').catch(err => console.error(err.stack))
-    repo.deleteFile('package.json').catch(err => console.error(err.stack))
+    repo.deleteFile('machines/angelcity/base/machine.json').then(() => {
+      return repo.deleteFile('package.json')
+    }).catch(err => {
+      console.error(err.stack)
+    })
   }
 });
