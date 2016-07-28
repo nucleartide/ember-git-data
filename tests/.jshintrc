@@ -26,7 +26,7 @@
   "node": false,
   "browser": false,
   "boss": true,
-  "curly": true,
+  "curly": false,
   "debug": false,
   "devel": false,
   "eqeqeq": true,
@@ -48,5 +48,7 @@
   "white": false,
   "eqnull": true,
   "esversion": 6,
-  "unused": true
+  "unused": "vars",
+  "asi": true,
+  "noyield": true
 }
