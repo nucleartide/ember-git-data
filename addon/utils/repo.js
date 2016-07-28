@@ -3,6 +3,7 @@ import Ember from 'ember'
 import { Blob, JSONBlob } from 'ember-git-data/utils/blob'
 import NotFoundError from 'ember-ajax/errors'
 import arrayRemove from 'ember-git-data/utils/array-remove'
+import basename from 'ember-git-data/utils/basename'
 
 const {
   assert,
@@ -111,75 +112,114 @@ export default class Repo {
   // jshint ignore:end
 
   /**
+   * TODO: would help to use typescript here. need to distinguish between Trees
+   * and TreeInfo objects
+   *
    * @public
    * @param {String} path
    * @reject {AjaxError}
    */
   async deleteFile(path = '') {
+    // short-circuit
+    if (!path) return
+
     // if the blob is in the read queue, remove and destroy
     const blob = arrayRemove(this._readQueue, blob => blob.path === path)
     if (blob) blob.destroy()
 
     const treeSHA = await this.treeSHA()
-    const tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
+    const rootTree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
+    const segments = path.split('/')
+    const [pathOfFileToDelete, pathOfTreeToDeleteFrom, ...treePaths] = segments
+    .map((seg, i) => {
+      if (i === 0) return seg
+      return segments.slice(0, i).join('/') + '/' + seg
+    })
+    .reverse()
+    .concat('')
+    // console.log(pathOfFileToDelete, pathOfTreeToDeleteFrom, treePaths)
 
-//    // machines/angelcity/base/machine.json
-//    // package.json
-//    //
-//    // ===
-//    //
-//    // fetch machines/angelcity/base tree
-//    //   remove machines/angelcity/base/machine.json from tree
-//    //   create new tree
-//    //   pass to next step
-//    //
-//    // ===
-//    //
-//    // accept machines/angelcity/base tree
-//    // fetch machines/angelcity tree
-//    //   set machines/angelcity/base tree to passed-in tree's sha
-//    //   create new tree
-//    //   pass to next step
-//    //
-//    // accept machines/angelcity tree
-//    // fetch machines tree
-//    //   set machines/angelcity tree to passed-in tree's sha
-//    //   create new tree
-//    //   pass to next step
-//    //
-//    // ===
-//    //
-//    // accept machines tree
-//    // fetch root tree
-//    //   set machines tree to passed-in tree's sha
-//    //   create new tree
-//    // update cached SHA
-//    const segments = path.split('/')
-//    const [fileToDelete, treeToDeleteFrom = '', ...treePaths] = segments
-//    .map((s, i) => {
-//      if (i === 0) return s
-//      return segments.slice(0, i).join('/') + '/' + s
-//    })
-//    .reverse()
-//
-//    console.log(fileToDelete)
-//    console.log(treeToDeleteFrom)
-//    console.log(treePaths)
-//
-//    // fetch tree of first tree path
-//    // delete "fileToDelete" from tree
-//    // save tree, store new tree in toDelete
-//    // remove first element from treePaths
-//    // for each remaining path in treePaths
-//    //   fetch the tree
-//    //   add "toSave" to the tree
-//    //   save the tree (create tree)
-//    //   assign the new tree to "toSave"
-//    // finally,
-//    //   fetch the root tree
-//    //   add "toSave" to the tree
-//    //   save the tree (create tree)
-//    //   update cached sha
+    // fetch tree of first tree path
+    let treeToDeleteFrom
+    if (pathOfTreeToDeleteFrom === '') {
+      treeToDeleteFrom = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${rootTree.sha}`)
+    } else {
+      const treeInfo = rootTree.tree.find(obj => obj.path === pathOfTreeToDeleteFrom)
+      if (!treeInfo) throw new NotFoundError()
+      treeToDeleteFrom = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeInfo.sha}`)
+    }
+    // console.log(treeToDeleteFrom.tree.length)
+
+    // delete "pathOfFileToDelete" from tree
+    arrayRemove(treeToDeleteFrom.tree, obj => basename(obj.path) === basename(pathOfFileToDelete))
+    // console.log(treeToDeleteFrom.tree.length)
+
+    // create the updated tree on github
+    await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({
+        tree: treeToDeleteFrom.tree
+      })
+    })
+
+    // save the current TreeInfo object
+    let treeInfo =
+      pathOfTreeToDeleteFrom === '' ? null :
+      rootTree.tree.find(obj => obj.path === pathOfTreeToDeleteFrom)
+
+    // assigned below
+    let newRootSHA
+
+    // console.log(treeToDeleteFrom.sha)
+    // console.log('newTree:', newTree)
+
+    // for each remaining path in treePaths
+    for (const path of treePaths) {
+      // fetch the tree
+      let tree
+      if (path === '') {
+        tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${rootTree.sha}`)
+      } else {
+        const treeInfo = rootTree.tree.find(obj => obj.path === path)
+        if (!treeInfo) throw new NotFoundError()
+        tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeInfo.sha}`)
+      }
+      console.log(path, tree)
+
+      // add "treeToUpdate" to the tree, replacing its older version
+      arrayRemove(tree.tree, obj => basename(obj.path) === basename(path))
+      tree.tree.push(treeInfo)
+
+      // create the updated tree on github
+      const newTree = await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({
+          tree: tree.tree
+        })
+      })
+
+      // save the current TreeInfo object
+      treeInfo =
+        path === '' ? null :
+        rootTree.tree.find(obj => obj.path === path)
+
+      // assign SHA
+      newRootSHA = newTree.sha
+    }
+
+    console.log(newRootSHA)
+    assert('newRootSHA is non-empty', newRootSHA)
+    this._cachedTreeSHA = newRootSHA
+
+//    // x fetch tree of first tree path
+//    // x delete "fileToDelete" from tree
+//    // x save tree, store new tree in toDelete
+//    // x for each remaining path in treePaths
+//    //   x fetch the tree
+//    //   x add "treeToUpdate" to the tree
+//    //   x save the tree (create tree)
+//    //   x assign the new tree to "treeToUpdate"
+//    // x update cached sha
   }
 
   /**

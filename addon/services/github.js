@@ -24,7 +24,6 @@ export default AjaxService.extend({
    * @param {String} branch
    */
   repo(owner, repo, branch) {
-    console.log('repo')
     return new Repo(this, owner, repo, branch)
   },
 })
