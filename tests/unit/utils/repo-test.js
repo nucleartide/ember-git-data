@@ -86,3 +86,22 @@ test('when path is falsy, it should not throw errors', async function(assert) {
   }
 })
 
+/**
+ * Acceptance tests.
+ * TODO: move into another file
+ */
+
+test('acceptance', async function(assert) {
+  const packageJson = await this.repo.readFile('package.json')
+  console.log(packageJson.content)
+
+  await this.repo.deleteFile('package.json')
+  assert.throws(() => packageJson.content = {}, /blob was destroyed/)
+
+  const veniceBaseMachine = await this.repo.readFile('machines/venice/base/machine.json')
+  console.log(veniceBaseMachine)
+
+  await this.repo.deleteFile('machines/venice/base/machine.json')
+  assert.throws(() => veniceBaseMachine.content = {}, /blob was destroyed/)
+})
+

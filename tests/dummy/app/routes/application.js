@@ -16,7 +16,7 @@ export default Ember.Route.extend({
     const github = get(this, 'github')
     set(github, 'token', ENV.githubAccessToken)
 
-    const repo = github.repo('RisingTideGames', 'slots-data', 'master')
+    const repo = github.repo('RisingTideGames', 'slots-data-dev', 'master')
     repo.readFile('package.json')
     .then(blob => {
       const json = blob.content
@@ -26,7 +26,7 @@ export default Ember.Route.extend({
     })
     .catch(err => console.error(err.stack))
 
-    repo.deleteFile('machines/angelcity/base/machine.json').then(() => {
+    repo.deleteFile('machines/wordswithfriends/base/machine.json').then(() => {
       return repo.deleteFile('package.json')
     }).catch(err => {
       console.error(err.stack)

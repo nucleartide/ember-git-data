@@ -1,5 +1,13 @@
 # Ember-git-data
 
+// const packageJson = await slotsData.readFile('package.json')
+// const json = packageJson.content
+// json.whoop = 'dee doo'
+// packageJson.content = whoop
+// await slotsData.commit('whoop de doo!!!1')
+//
+// updates (done by the user)
+
 This README outlines the details of collaborating on this Ember addon.
 
 ## Installation

@@ -124,7 +124,7 @@ export default class Repo {
     if (!path) return
 
     // if the blob is in the read queue, remove and destroy
-    const blob = arrayRemove(this._readQueue, blob => blob.path === path)
+    const blob = arrayRemove(this._readQueue, blob => blob._path === path)
     if (blob) blob.destroy()
 
     // declare lots of variables we will need later
@@ -242,21 +242,13 @@ export default class Repo {
   // x readFile => Promise<Blob>
   //   if blob is in read queue, return that blob
   //   else, fetch and add to read queue
-  // deleteFile => Promise<undefined>
+  // x deleteFile => Promise<undefined>
   //   if the object is in the read queue, pop the object from the queue
   //   "destroy" the object, meaning you can't set stuff anymore
   //   run delete operations on the cached tree
   // createFile => Promise<Blob>
   //   if blob is in read queue, return that blob
   //   else, create (adding to cached tree) and add to read queue
-  //
-  // const packageJson = await slotsData.readFile('package.json')
-  // const json = packageJson.content
-  // json.whoop = 'dee doo'
-  // packageJson.content = whoop
-  // await slotsData.commit('whoop de doo!!!1')
-  //
-  // updates (done by the user)
   //
   // commit(message) => Promise<undefined>
   //   for each popped object in the read queue,
@@ -265,7 +257,7 @@ export default class Repo {
   //   tree cache should be clear
   //   commit and update HEAD reference
   //
-  // tree cache - will probably be in array representation
+  // x tree cache - will probably be in array representation
   //   read: use recursive fetch
   //   delete (write): leaf-most tree to parent-most tree
   //   create (write): add to tree, then leaf-most tree to parent-most tree

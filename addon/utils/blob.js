@@ -63,7 +63,7 @@ export class JSONBlob extends Blob {
   }
 
   set content(value) {
-    this._content = b64EncodeUnicode(JSON.stringify(value, null, '\t'))
+    super.content = JSON.stringify(value, null, '\t')
   }
 }
 
