@@ -92,16 +92,33 @@ test('when path is falsy, it should not throw errors', async function(assert) {
  */
 
 test('acceptance', async function(assert) {
-  const packageJson = await this.repo.readFile('package.json')
-  console.log(packageJson.content)
+  assert.expect(4)
 
+  const packageJson = await this.repo.readFile('package.json')
   await this.repo.deleteFile('package.json')
+
   assert.throws(() => packageJson.content = {}, /blob was destroyed/)
+  console.log('first')
+  try {
+    const packageJson = await this.repo.readFile('package.json')
+    console.log('packageJson:', packageJson)
+  } catch (err) {
+    console.error(err.stack)
+    assert.ok(err)
+    console.log('second')
+  }
 
   const veniceBaseMachine = await this.repo.readFile('machines/venice/base/machine.json')
-  console.log(veniceBaseMachine)
-
   await this.repo.deleteFile('machines/venice/base/machine.json')
+
   assert.throws(() => veniceBaseMachine.content = {}, /blob was destroyed/)
+  console.log('third')
+  try {
+    await this.repo.readFile('machines/venice/base/machine.json')
+  } catch (err) {
+    console.error(err.stack)
+    assert.ok(err)
+    console.log('fourth')
+  }
 })
 

@@ -1,7 +1,7 @@
 
 import Ember from 'ember'
 import { Blob, JSONBlob } from 'ember-git-data/utils/blob'
-import NotFoundError from 'ember-ajax/errors'
+import { NotFoundError } from 'ember-ajax/errors'
 import arrayRemove from 'ember-git-data/utils/array-remove'
 import basename from 'ember-git-data/utils/basename'
 
@@ -163,8 +163,10 @@ export default class Repo {
       data: JSON.stringify({ tree: treeToDeleteFrom.tree })
     })
 
-    // if the path only had one segment, we're done here
-    if (segments.length === 1) return
+    // declare "newRootSHA", which will be repeatedly
+    // assigned in the loop below. last assignment is the
+    // new SHA.
+    let newRootSHA = updatedTree.sha
 
     // save the current TreeInfo object
     let treeInfo = null
@@ -177,11 +179,6 @@ export default class Repo {
       clone.path = basename(clone.path)
       treeInfo = clone
     }
-
-    // declare "newRootSHA", which will be repeatedly
-    // assigned in the loop below. last assignment is the
-    // new SHA.
-    let newRootSHA
 
     // for each remaining path in treePaths
     for (const path of treePaths) {
