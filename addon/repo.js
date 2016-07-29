@@ -1,7 +1,3 @@
-
-import Ember from 'ember'
-import { Blob, JSONBlob } from 'ember-git-data/utils/blob'
-
 /**
  * TODO: generators "just work" in ember...if i recall
  * ember-concurrency did some things to optimize file size?
@@ -9,12 +5,10 @@ import { Blob, JSONBlob } from 'ember-git-data/utils/blob'
  * TODO: github rate limit
  */
 export default class Repo {
-  constructor(
-    private githubAjax,
-    private owner: string,
-    private repo: string,
-    private branch: string
-  ) {
-  }
+    constructor(githubAjax, owner, repo, branch) {
+        this.githubAjax = githubAjax;
+        this.owner = owner;
+        this.repo = repo;
+        this.branch = branch;
+    }
 }
-

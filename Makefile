@@ -4,7 +4,9 @@ compile:
     addon/typings/b64-decode-unicode.d.ts \
     addon/typings/b64-encode-unicode.d.ts \
     addon/typings/ember.d.ts \
-    addon/blob.ts
+    addon/blob.ts \
+    addon/typings/blob.d.ts \
+    addon/repo.ts
 
 #    addon/utils/b64-decode-unicode.ts \
 #    addon/utils/b64-encode-unicode.ts \
