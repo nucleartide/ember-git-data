@@ -98,27 +98,37 @@ test('acceptance', async function(assert) {
   await this.repo.deleteFile('package.json')
 
   assert.throws(() => packageJson.content = {}, /blob was destroyed/)
-  console.log('first')
   try {
     const packageJson = await this.repo.readFile('package.json')
-    console.log('packageJson:', packageJson)
   } catch (err) {
-    console.error(err.stack)
-    assert.ok(err)
-    console.log('second')
+    assert.equal(err.message, 'Resource was not found.')
   }
 
   const veniceBaseMachine = await this.repo.readFile('machines/venice/base/machine.json')
   await this.repo.deleteFile('machines/venice/base/machine.json')
 
   assert.throws(() => veniceBaseMachine.content = {}, /blob was destroyed/)
-  console.log('third')
   try {
     await this.repo.readFile('machines/venice/base/machine.json')
   } catch (err) {
-    console.error(err.stack)
-    assert.ok(err)
-    console.log('fourth')
+    assert.equal(err.message, 'Resource was not found.')
   }
+})
+
+test('more acceptance', async function(assert) {
+  const somefileJson = this.repo.createFile('somefile.json')
+  somefileJson.content = { hello: 'jason' }
+
+  const somefileJson2 = await this.repo.readFile('somefile.json')
+  assert.equal(somefileJson, somefileJson2)
+  assert.deepEqual(somefileJson2.content, { hello: 'jason' })
+
+  await this.repo.deleteFile('somefile.json')
+  assert.throws(() => somefileJson.content = {}, /blob was destroyed/)
+  assert.throws(() => somefileJson2.content = {}, /blob was destroyed/)
+
+  const packageJson = await this.repo.readFile('package.json')
+  assert.ok('dependencies' in packageJson.content ||
+            'devDependencies' in packageJson.content)
 })
 

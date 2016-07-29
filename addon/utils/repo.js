@@ -70,7 +70,7 @@ export default class Repo {
   // jshint ignore:start
   async readFile(path = '', FileType = Repo.detectFileType(path)) {
     // if blob is in the read queue, return that blob
-    const blob = this._readQueue.find(blob => blob.path === path)
+    const blob = this._readQueue.find(blob => blob._path === path)
     if (blob) return blob
 
     // otherwise, fetch the blob
@@ -103,13 +103,20 @@ export default class Repo {
    * @param {Class} fileType
    * @return {Blob}
    */
-  // jshint ignore:start
   createFile(path = '', FileType = Repo.detectFileType(path)) {
-    const blob = new FileType({ path })
-    this._createQueue.push(blob)
-    return blob
+    // if blob is in the read queue, return that blob
+    const blob = this._readQueue.find(blob => blob._path === path)
+    if (blob) return blob
+
+    // otherwise, create the blob
+    const newBlob = new FileType({ path })
+
+    // add the blob to the read queue
+    this._readQueue.push(newBlob)
+
+    // and return the new blob
+    return newBlob
   }
-  // jshint ignore:end
 
   /**
    * TODO: would help to use typescript here. need to distinguish between Trees
@@ -138,6 +145,15 @@ export default class Repo {
       })
       .reverse()
       .concat('')
+
+    // when destroying a blob that *hasn't* been created via
+    // the github api, we should just return here so as not
+    // to throw NotFoundErrors
+    {
+      const wasInReadQueue = Boolean(blob)
+      const isCreated = Boolean(rootTree.tree.find(obj => obj.path === path))
+      if (wasInReadQueue && !isCreated) return
+    }
 
     // fetch tree to delete from
     let treeToDeleteFrom
@@ -229,6 +245,7 @@ export default class Repo {
    * @return {RSVP.Promise}
    */
   commit(message) {
+    // TODO: need to mkdir -p if the directories don't exist
   }
 
   // internally:
