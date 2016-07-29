@@ -15,20 +15,9 @@ namespace Ember {
   }
 }
 
-class Blob {
-  constructor(
-    protected content: string = '',
-    protected url: string = '',
-    protected sha: string = '',
-    protected size: number = 0,
-    protected path: string = '',
-    protected mode: string = ''
-  ) {}
-}
-
 class JSONBlob extends Blob {
   get content() {
-    return 'test'
+    return null
   }
 
   set content(value) {
