@@ -2,11 +2,8 @@
 /**
  * Convert a base64 string back to its Unicode string
  * equivalent.
- *
- * @param {String} str
- * @return {String}
  */
-export default function b64DecodeUnicode(str) {
+export default function b64DecodeUnicode(str: string): string {
   // base 64 decode
   str = atob(str)
 

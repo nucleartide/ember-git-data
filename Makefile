@@ -1,10 +1,11 @@
 
-#all:
-#	@watch -i 5 make compile
-#	@echo 'building...'
-
 compile:
-	@tsc --target ES2015 --noResolve addon/utils/repo.ts addon/typings/ember.d.ts
+	@tsc --target ES2015 --noResolve \
+    addon/repo.ts \
+    addon/utils/b64-decode-unicode.ts \
+    addon/utils/b64-encode-unicode.ts \
+    addon/utils/basename.ts \
+    addon/typings/ember.d.ts
 
 .PHONY: all
 
