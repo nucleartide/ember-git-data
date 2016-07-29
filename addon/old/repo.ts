@@ -15,16 +15,6 @@ namespace Ember {
   }
 }
 
-class JSONBlob extends Blob {
-  get content() {
-    return null
-  }
-
-  set content(value) {
-    super.content = JSON.stringify(value, null, '\t')
-  }
-}
-
 export default class Repo {
   private readQueue: Array<Object>
   private cachedTreeSHA: string
