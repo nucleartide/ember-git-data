@@ -1,9 +1,11 @@
 
 # Ember Git Data
 
-- Sane wrapper for GitHub's [Git Database API][1].
-- Commit more than one file change at a time.
-- Good for building GitHub-backed web applications, like [GitBook][2].
+> Sane wrapper for GitHub's [Git Database API][1].
+
+> Commit more than one file change at a time.
+
+> Good for building GitHub-backed web applications, like [GitBook][2].
 
 ## Install
 
