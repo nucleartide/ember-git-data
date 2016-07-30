@@ -20,7 +20,10 @@ const readme = await repo.createFile('Readme.md')
 // read
 const packageJson = await repo.readFile('package.json')
 
-// update
+// update a plain file
+readme.content = vaporize(readme.content) // ｖａｐｏｒｗａｖｅ
+
+// update a JSON file
 const json = packageJson.content
 json.hello = 'world'
 packageJson.content = json
