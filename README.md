@@ -7,6 +7,10 @@
 
 > Good for building GitHub-backed web applications, like [GitBook][2].
 
+## Demo
+
+Try the [demo]() first.
+
 ## Install
 
 ```
