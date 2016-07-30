@@ -45,7 +45,7 @@ I tried using Ember Data initially, but it quickly became very hard to work with
 
 #### Why not extend [ember-data-github][3]?
 
-This library focuses *solely* on [GitHub's Git Data API][1]. ember-data-github has a broader focus of wrapping everything else.
+This library focuses solely on [GitHub's Git Data API][1]. I think [ember-data-github][3] has a broader focus of wrapping everything else.
 
 [1]: https://developer.github.com/v3/git/
 [2]: https://www.gitbook.com/
