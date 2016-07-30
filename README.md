@@ -1,7 +1,7 @@
 
 # Ember Git Data
 
-Sane wrapper for GitHub's [Git Database API][1].
+Sane wrapper for GitHub's [Git Database API][1]. Good for building GitHub-backed web applications, like [GitBook][2].
 
 ## Install
 
@@ -34,5 +34,10 @@ await repo.commit('this is a commit message')
 
 ## Rationale
 
+#### Why not use Ember Data?
+
+#### Why not extend ember-data-github?
+
 [1]: https://developer.github.com/v3/git/
+[2]: https://www.gitbook.com/
 
