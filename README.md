@@ -1,34 +1,7 @@
-# Ember-git-data
 
-// const packageJson = await slotsData.readFile('package.json')
-// const json = packageJson.content
-// json.whoop = 'dee doo'
-// packageJson.content = whoop
-// await slotsData.commit('whoop de doo!!!1')
-//
-// updates (done by the user)
+# Ember Git Data
 
-This README outlines the details of collaborating on this Ember addon.
+Sane wrapper for GitHub's [Git Database API][1].
 
-## Installation
+[1]: https://developer.github.com/v3/git/
 
-* `git clone` this repository
-* `npm install`
-* `bower install`
-
-## Running
-
-* `ember serve`
-* Visit your app at http://localhost:4200.
-
-## Running Tests
-
-* `npm test` (Runs `ember try:testall` to test your addon against multiple Ember versions)
-* `ember test`
-* `ember test --server`
-
-## Building
-
-* `ember build`
-
-For more information on using ember-cli, visit [http://ember-cli.com/](http://ember-cli.com/).
