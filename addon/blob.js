@@ -6,12 +6,17 @@ import Ember from 'ember'
 const { set } = Ember
 
 export class Blob {
-  constructor() {
-    this._content = ''
-    this._encoding = 'base64'
-    this._url = ''
-    this._sha = ''
-    this._size = 0
+  constructor({
+    content = '',
+    url = '',
+    sha = '',
+    size = 0
+  } = {}) {
+    this._content = content
+    this.encoding = 'base64'
+    this.url = url
+    this.sha = sha
+    this.size = size
 
     this._isDestroyed = false
   }
@@ -43,23 +48,35 @@ export class JSONBlob extends Blob {
   }
 }
 
+/**
+ * NOTE: This class is never constructed. It serves mostly
+ * as type documentation.
+ */
 export class Info {
   constructor() {
-    this._path = ''
-    this._mode = ''
-    this._type = ''
-    this._sha = ''
-    this._url = ''
+    this.path = ''
+    this.mode = ''
+    this.type = ''
+    this.sha = ''
+    this.url = ''
   }
 }
 
+/**
+ * NOTE: This class is never constructed. It serves mostly
+ * as type documentation.
+ */
 export class BlobInfo extends Info {
   constructor() {
     super()
-    this._size = 0
+    this.size = 0
   }
 }
 
+/**
+ * NOTE: This class is never constructed. It serves mostly
+ * as type documentation.
+ */
 export class TreeInfo extends Info {
 }
 

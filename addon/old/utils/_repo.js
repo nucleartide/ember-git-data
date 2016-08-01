@@ -13,63 +13,6 @@ const {
 
 export default class Repo {
   /**
-   * @public
-   * @param {String} path
-   * @param {Class} fileType
-   * @resolve {Blob}
-   * @reject {AjaxError}
-   */
-  // jshint ignore:start
-  async readFile(path = '', FileType = Repo.detectFileType(path)) {
-    // if blob is in the read queue, return that blob
-    const blob = this._readQueue.find(blob => blob._path === path)
-    if (blob) return blob
-
-    // otherwise, fetch the blob
-    const treeSHA = await this.treeSHA()
-    const tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=${level}`)
-    const finalBlob = {}
-    {
-      const blob = tree.tree.find(obj => obj.path === path)
-      if (!blob) throw new NotFoundError()
-      const moreOfBlob = await this.github.request(`/repos/${this.owner}/${this.repo}/git/blobs/${blob.sha}`)
-      merge(finalBlob, blob)
-      merge(finalBlob, moreOfBlob)
-    }
-
-    // and add the blob to the read queue
-    {
-      const blob = new FileType(finalBlob)
-      this._readQueue.push(blob)
-      return blob
-    }
-  }
-  // jshint ignore:end
-
-  /**
-   * TODO: what if the file already exists?
-   *
-   * @public
-   * @param {String} path
-   * @param {Class} fileType
-   * @return {Blob}
-   */
-  createFile(path = '', FileType = Repo.detectFileType(path)) {
-    // if blob is in the read queue, return that blob
-    const blob = this._readQueue.find(blob => blob._path === path)
-    if (blob) return blob
-
-    // otherwise, create the blob
-    const newBlob = new FileType({ path })
-
-    // add the blob to the read queue
-    this._readQueue.push(newBlob)
-
-    // and return the new blob
-    return newBlob
-  }
-
-  /**
    * TODO: would help to use typescript here. need to distinguish between Trees
    * and TreeInfo objects
    *
