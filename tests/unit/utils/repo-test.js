@@ -130,6 +130,14 @@ test('more acceptance', async function(assert) {
   const packageJson = await this.repo.readFile('package.json')
   assert.ok('dependencies' in packageJson.content ||
             'devDependencies' in packageJson.content)
+
+  const highRoller = await this.repo.readFile('global/trigger-modules/high_roller_module.json')
+  highRoller.content = { jason: Date.now() }
+  try {
+    await this.repo.commit('test commit')
+  } catch (err) {
+    console.error(err.stack)
+  }
 })
 // jshint ignore:end
 

@@ -1,6 +1,7 @@
 
 import b64DecodeUnicode from './utils/b64-decode-unicode'
 import b64EncodeUnicode from './utils/b64-encode-unicode'
+import basename from './utils/basename'
 
 export class Blob {
   constructor({
@@ -9,7 +10,8 @@ export class Blob {
     sha = '',
     size = 0,
     path = '',
-    mode = '',
+    mode = '100644',
+    isDirty = false,
   } = {}) {
     // returned by https://developer.github.com/v3/git/blobs/#get-a-blob
     this._content = content
@@ -22,7 +24,8 @@ export class Blob {
     this.path = path
     this.mode = mode
 
-    this._isDestroyed = false
+    this.isDestroyed = false
+    this.isDirty = false
   }
 
   get content() {
@@ -30,12 +33,32 @@ export class Blob {
   }
 
   set content(value) {
-    if (this._isDestroyed) throw new Error('blob was destroyed')
+    if (this.isDestroyed) throw new Error('blob was destroyed')
     this._content = b64EncodeUnicode(value)
+    this.isDirty = true
+  }
+
+  /**
+   * @return {String} content in base64 form
+   */
+  get rawContent() {
+    return this._content
   }
 
   destroy() {
-    this._isDestroyed = true
+    this.isDestroyed = true
+  }
+
+  /**
+   * Split out the blob in "info" format.
+   */
+  info() {
+    return {
+      mode: this.mode,
+      path: basename(this.path),
+      sha: this.sha,
+      size: this.size,
+    }
   }
 }
 
@@ -48,7 +71,7 @@ export class JSONBlob extends Blob {
   }
 
   set content(value) {
-    super.content = JSON.stringify(value, null, '\t')
+    super.content = JSON.stringify(value, null, '\t') + '\n'
   }
 }
 

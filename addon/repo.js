@@ -39,6 +39,7 @@ export default class Repo {
 
     // https://developer.github.com/v3/git/trees/#get-a-tree
     this.cachedTreeSHA = ''
+    this.cachedCommitSHA = ''
   }
 
   /**
@@ -60,6 +61,7 @@ export default class Repo {
     if (!this.cachedTreeSHA) {
       const ref = await this.github.request(`/repos/${this.owner}/${this.repo}/git/refs/heads/${this.branch}`)
       const commitSHA = get(ref, 'object.sha')
+      this.cachedCommitSHA = commitSHA
       const commit = await this.github.request(`/repos/${this.owner}/${this.repo}/git/commits/${commitSHA}`)
       this.cachedTreeSHA = get(commit, 'tree.sha')
     }
@@ -125,7 +127,7 @@ export default class Repo {
       if (exists) return blob
 
       // otherwise, create the blob
-      const newBlob = new FileType({ path })
+      const newBlob = new FileType({ path, isDirty: true })
 
       // add the blob to the read queue
       this.readQueue.push(newBlob)
@@ -258,5 +260,118 @@ export default class Repo {
     this.cachedTreeSHA = newRootSHA
   }
   // jshint ignore:end
+
+  /**
+   * @param {Blob} blob
+   */
+  async updateBlob(blob) {
+    // create new blob
+    const newBlobRes = await this.github.post(`/repos/${this.owner}/${this.repo}/git/blobs`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({
+        content: blob.rawContent,
+        encoding: 'base64'
+      })
+    })
+
+    // gotta update parents now.
+    // current tree: A -> B -> C -> oldBlob
+    // update order: C, B, then A
+
+    // fetch root tree so we can do comparisons
+    const treeSHA = await this.treeSHA()
+    const rootTree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
+    const segments = blob.path.split('/')
+    const [, ...treePaths] = segments
+      .map((seg, i) => {
+        if (i === 0) return seg
+        return segments.slice(0, i).join('/') + '/' + seg
+      })
+      .reverse()
+      .concat('')
+
+    // create blob object
+    const newBlob = new Blob(newBlobRes)
+    newBlob.path = blob.path
+
+    // this is the child that replaces the old blob/tree
+    // it is updated on every iteration of the loop below
+    let newChild = newBlob.info()
+    let newRootSHA = newChild.sha
+
+    for (const path of treePaths) {
+      const treeInfo = rootTree.tree.find(obj => obj.path === path)
+      const treeExists = Boolean(treeInfo)
+      let tree =
+        path === '' ? await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}`) :
+        treeExists ? await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeInfo.sha}`) :
+        null // the tree doesn't exist yet
+
+      if (tree) {
+        // replace old tree with new tree
+        arrayRemove(tree.tree, obj => basename(obj.path) === basename(path))
+        tree.tree.push(newChild)
+      }
+
+      let newTree
+      if (tree) {
+        // create the updated tree on github
+        newTree = await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+          contentType: 'application/json; charset=utf-8',
+          data: JSON.stringify({ tree: tree.tree })
+        })
+      } else {
+        // create a new empty tree
+        newTree = await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+          contentType: 'application/json; charset=utf-8',
+          data: JSON.stringify({ tree: [newChild] })
+        })
+      }
+
+      // save the info object
+      newChild = {
+        sha: newTree.sha,
+        path: basename(path),
+        mode: '040000', // for directories
+        type: 'tree'
+      }
+
+      // save SHA
+      newRootSHA = newTree.sha
+    }
+
+    assert('newRootSHA is non-empty', newRootSHA)
+    this.cachedTreeSHA = newRootSHA
+  }
+
+  /**
+   * @public
+   * @param {String} message
+   * @reject {AjaxError}
+   */
+  async commit(message) {
+    for (const blob of this.readQueue) {
+      if (blob.isDirty) {
+        await this.updateBlob(blob)
+      }
+    }
+
+    this.readQueue.length = 0
+
+    const commit = await this.github.post(`/repos/${this.owner}/${this.repo}/git/commits`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({
+        message: message,
+        tree: this.cachedTreeSHA,
+        parents: [this.cachedCommitSHA]
+      })
+    })
+    this.cachedCommitSHA = commit.sha
+
+    await this.github.patch(`/repos/${this.owner}/${this.repo}/git/refs/heads/${this.branch}`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({ sha: commit.sha })
+    })
+  }
 }
 
