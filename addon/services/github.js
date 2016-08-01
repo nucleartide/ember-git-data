@@ -1,7 +1,7 @@
 
 import Ember from 'ember'
-import Repo from 'ember-git-data/repo'
 import AjaxService from 'ember-ajax/services/ajax'
+import Repo from 'ember-git-data/repo'
 
 const {
   computed,
