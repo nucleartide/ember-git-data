@@ -121,5 +121,123 @@ export default class Repo {
     // otherwise, return the blob in the read queue
     return blob
   }
+
+  /**
+   * @public
+   * @param {String} path
+   * @reject {AjaxError}
+   */
+  async deleteFile(path = '') {
+    // short-circuit
+    if (!path) return
+
+    // if the blob is in the read queue, remove and destroy
+    const blob = arrayRemove(this._readQueue, blob => blob.path === path)
+    if (blob) blob.destroy()
+
+    // declare lots of variables we will need later
+    const treeSHA = await this.treeSHA()
+    const rootTree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
+    const segments = path.split('/')
+    const [pathOfFileToDelete, pathOfTreeToDeleteFrom, ...treePaths] = segments
+      .map((seg, i) => {
+        if (i === 0) return seg
+        return segments.slice(0, i).join('/') + '/' + seg
+      })
+      .reverse()
+      .concat('')
+
+    // when destroying a blob that *hasn't* been created via
+    // the github api, we should just return here so as not
+    // to throw NotFoundErrors below
+    {
+      const wasInReadQueue = Boolean(blob)
+      const isCreated = Boolean(rootTree.tree.find(obj => obj.path === path))
+      if (wasInReadQueue && !isCreated) return
+    }
+
+    // fetch tree to delete from
+    let treeToDeleteFrom
+    if (pathOfTreeToDeleteFrom === '') {
+      treeToDeleteFrom = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${rootTree.sha}`)
+    } else {
+      const treeInfo = rootTree.tree.find(obj => obj.path === pathOfTreeToDeleteFrom)
+      if (!treeInfo) throw new NotFoundError()
+      treeToDeleteFrom = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeInfo.sha}`)
+    }
+
+    // delete "pathOfFileToDelete" from tree
+    {
+      const before = treeToDeleteFrom.tree.length
+      arrayRemove(treeToDeleteFrom.tree, obj => basename(obj.path) === basename(pathOfFileToDelete))
+      const after = treeToDeleteFrom.tree.length
+      assert('removed one element from tree', before - 1 === after)
+    }
+
+    // create the updated tree on github
+    const updatedTree = await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({ tree: treeToDeleteFrom.tree })
+    })
+
+    // declare "newRootSHA", which will be repeatedly
+    // assigned in the loop below. last assignment is the
+    // new SHA.
+    let newRootSHA = updatedTree.sha
+
+    // save the current TreeInfo object
+    let treeInfo = null
+    if (pathOfTreeToDeleteFrom !== '') {
+      const oldTreeInfo = rootTree.tree.find(obj => obj.path === pathOfTreeToDeleteFrom)
+      const clone = {}
+      merge(clone, oldTreeInfo)
+      delete clone.url
+      clone.sha = updatedTree.sha
+      clone.path = basename(clone.path)
+      treeInfo = clone
+    }
+
+    // for each remaining path in treePaths
+    for (const path of treePaths) {
+      // fetch the tree
+      let tree
+      if (path === '') {
+        tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${rootTree.sha}`)
+      } else {
+        const treeInfo = rootTree.tree.find(obj => obj.path === path)
+        if (!treeInfo) throw new NotFoundError()
+        tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeInfo.sha}`)
+      }
+
+      // add new "treeInfo" to the tree, replacing its older version
+      arrayRemove(tree.tree, obj => basename(obj.path) === basename(path))
+      tree.tree.push(treeInfo)
+
+      // create the updated tree on github
+      const newTree = await this.github.post(`/repos/${this.owner}/${this.repo}/git/trees`, {
+        contentType: 'application/json; charset=utf-8',
+        data: JSON.stringify({ tree: tree.tree })
+      })
+
+      // save the current TreeInfo object
+      treeInfo = null
+      if (path !== '') {
+        const oldTreeInfo = rootTree.tree.find(obj => obj.path === path)
+        const clone = {}
+        merge(clone, oldTreeInfo)
+        delete clone.url
+        clone.sha = newTree.sha
+        clone.path = basename(clone.path)
+        treeInfo = clone
+      }
+
+      // save SHA
+      newRootSHA = newTree.sha
+    }
+
+    // update cached SHA
+    assert('newRootSHA is non-empty', newRootSHA)
+    this._cachedTreeSHA = newRootSHA
+  }
 }
 
