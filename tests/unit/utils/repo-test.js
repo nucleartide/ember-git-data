@@ -1,5 +1,6 @@
 
-import Repo from 'dummy/utils/repo'
+// jshint ignore:start
+import Repo from 'ember-git-data/repo'
 import { test } from 'qunit'
 import moduleForAcceptance from 'dummy/tests/helpers/module-for-acceptance'
 import ENV from 'dummy/config/environment'
@@ -66,7 +67,7 @@ test('when cached tree sha is empty, it should return non-empty', async function
 
 test('when cached tree sha is non-empty, it should return the same sha', async function(assert) {
   const sha = 'non-empty bro'
-  this.repo._cachedTreeSHA = sha
+  this.repo.cachedTreeSHA = sha
   assert.equal(await this.repo.treeSHA(), sha)
 })
 
@@ -88,7 +89,6 @@ test('when path is falsy, it should not throw errors', async function(assert) {
 
 /**
  * Acceptance tests.
- * TODO: move into another file
  */
 
 test('acceptance', async function(assert) {
@@ -116,7 +116,7 @@ test('acceptance', async function(assert) {
 })
 
 test('more acceptance', async function(assert) {
-  const somefileJson = this.repo.createFile('somefile.json')
+  const somefileJson = await this.repo.createFile('somefile.json')
   somefileJson.content = { hello: 'jason' }
 
   const somefileJson2 = await this.repo.readFile('somefile.json')
@@ -131,4 +131,5 @@ test('more acceptance', async function(assert) {
   assert.ok('dependencies' in packageJson.content ||
             'devDependencies' in packageJson.content)
 })
+// jshint ignore:end
 

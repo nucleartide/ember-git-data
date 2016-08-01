@@ -1,22 +1,26 @@
 
 import b64DecodeUnicode from './utils/b64-decode-unicode'
 import b64EncodeUnicode from './utils/b64-encode-unicode'
-import Ember from 'ember'
-
-const { set } = Ember
 
 export class Blob {
   constructor({
     content = '',
     url = '',
     sha = '',
-    size = 0
+    size = 0,
+    path = '',
+    mode = '',
   } = {}) {
+    // returned by https://developer.github.com/v3/git/blobs/#get-a-blob
     this._content = content
     this.encoding = 'base64'
     this.url = url
     this.sha = sha
     this.size = size
+
+    // returned by https://developer.github.com/v3/git/trees/#get-a-tree
+    this.path = path
+    this.mode = mode
 
     this._isDestroyed = false
   }

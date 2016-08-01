@@ -1,11 +1,19 @@
 
 import Ember from 'ember'
 import { Blob, JSONBlob } from './blob'
+// jshint ignore:start
 import { NotFoundError } from 'ember-ajax/errors'
 import arrayRemove from 'ember-git-data/utils/array-remove'
 import basename from 'ember-git-data/utils/basename'
+// jshint ignore:end
 
-const { assert } = Ember
+const {
+  assert,
+  // jshint ignore:start
+  get,
+  merge,
+  // jshint ignore:end
+} = Ember
 
 export default class Repo {
   /**
@@ -15,22 +23,22 @@ export default class Repo {
    * @param {String} repo
    * @param {String}
    */
-  constructor(githubAjax, owner, repo, branch) {
-    assert('must pass in github ajax service', githubAjax)
+  constructor(github, owner, repo, branch) {
+    assert('must pass in github ajax service', github)
     assert('must pass in owner', owner)
     assert('must pass in repo', repo)
     assert('must pass in branch', branch)
 
-    this._githubAjax = githubAjax
-    this._owner = owner
-    this._repo = repo
-    this._branch = branch
+    this.github = github
+    this.owner = owner
+    this.repo = repo
+    this.branch = branch
 
     // @type {Array<Blob>}
-    this._readQueue = []
+    this.readQueue = []
 
     // https://developer.github.com/v3/git/trees/#get-a-tree
-    this._cachedTreeSHA = ''
+    this.cachedTreeSHA = ''
   }
 
   /**
@@ -47,16 +55,18 @@ export default class Repo {
    * @private
    * @return {String}
    */
+  // jshint ignore:start
   async treeSHA() {
-    if (!this._cachedTreeSHA) {
+    if (!this.cachedTreeSHA) {
       const ref = await this.github.request(`/repos/${this.owner}/${this.repo}/git/refs/heads/${this.branch}`)
       const commitSHA = get(ref, 'object.sha')
       const commit = await this.github.request(`/repos/${this.owner}/${this.repo}/git/commits/${commitSHA}`)
-      this._cachedTreeSHA = get(commit, 'tree.sha')
+      this.cachedTreeSHA = get(commit, 'tree.sha')
     }
 
-    return this._cachedTreeSHA
+    return this.cachedTreeSHA
   }
+  // jshint ignore:end
 
   /**
    * @public
@@ -65,8 +75,9 @@ export default class Repo {
    * @resolve {Blob}
    * @reject {AjaxError}
    */
+  // jshint ignore:start
   async readFile(path = '', FileType = Repo.detectFileType(path)) {
-    const blob = this._readQueue.find(blob => blob.path === path)
+    const blob = this.readQueue.find(blob => blob.path === path)
 
     // if blob is not in the read queue
     if (!blob) {
@@ -76,16 +87,20 @@ export default class Repo {
       const info = tree.tree.find(obj => obj.path === path)
       if (!info) throw new NotFoundError()
 
-      // if the blob exists, fetch and return the blob
+      // since the blob exists, fetch and return the blob
+      const finalBlob = {}
+      merge(finalBlob, info)
       const res = await this.github.request(`/repos/${this.owner}/${this.repo}/git/blobs/${info.sha}`)
-      const blob = new FileType(res)
-      this._readQueue.push(blob)
+      merge(finalBlob, res)
+      const blob = new FileType(finalBlob)
+      this.readQueue.push(blob)
       return blob
     }
 
     // otherwise, return the blob in the read queue
     return blob
   }
+  // jshint ignore:end
 
   /**
    * @public
@@ -94,8 +109,9 @@ export default class Repo {
    * @resolve {Blob}
    * @reject {AjaxError}
    */
+  // jshint ignore:start
   async createFile(path = '', FileType = Repo.detectFileType(path)) {
-    const blob = this._readQueue.find(blob => blob._path === path)
+    const blob = this.readQueue.find(blob => blob._path === path)
 
     // if the blob is not in the read queue
     if (!blob) {
@@ -112,7 +128,7 @@ export default class Repo {
       const newBlob = new FileType({ path })
 
       // add the blob to the read queue
-      this._readQueue.push(newBlob)
+      this.readQueue.push(newBlob)
 
       // and return the new blob
       return newBlob
@@ -121,18 +137,20 @@ export default class Repo {
     // otherwise, return the blob in the read queue
     return blob
   }
+  // jshint ignore:end
 
   /**
    * @public
    * @param {String} path
    * @reject {AjaxError}
    */
+  // jshint ignore:start
   async deleteFile(path = '') {
     // short-circuit
     if (!path) return
 
     // if the blob is in the read queue, remove and destroy
-    const blob = arrayRemove(this._readQueue, blob => blob.path === path)
+    const blob = arrayRemove(this.readQueue, blob => blob.path === path)
     if (blob) blob.destroy()
 
     // declare lots of variables we will need later
@@ -237,7 +255,8 @@ export default class Repo {
 
     // update cached SHA
     assert('newRootSHA is non-empty', newRootSHA)
-    this._cachedTreeSHA = newRootSHA
+    this.cachedTreeSHA = newRootSHA
   }
+  // jshint ignore:end
 }
 

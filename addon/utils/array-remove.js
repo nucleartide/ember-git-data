@@ -1,7 +1,4 @@
 
-import Ember from 'ember'
-const { assert } = Ember
-
 /**
  * arrayRemove removes the first occurrence of an element
  * from an array and returns that element.

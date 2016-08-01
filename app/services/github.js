@@ -1,1 +1,3 @@
-export { default } from 'ember-git-data/services/github';
+
+export { default } from 'ember-git-data/services/github'
+
