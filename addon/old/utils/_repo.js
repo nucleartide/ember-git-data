@@ -12,48 +12,6 @@ const {
 } = Ember
 
 export default class Repo {
-  constructor(githubAjax, owner, repo, branch) {
-    assert('must pass in githubAjax', githubAjax)
-    assert('must pass in owner', owner)
-    assert('must pass in repo', repo)
-    assert('must pass in branch', branch)
-
-    this.github = githubAjax
-    this.owner = owner
-    this.repo = repo
-    this.branch = branch
-
-    // @type {Array<Blob>}
-    this._readQueue = []
-
-    // https://developer.github.com/v3/git/trees/#get-a-tree
-    this._cachedTreeSHA = null
-  }
-
-  /**
-   * @private
-   * @param {String} path
-   * @return {Blob}
-   */
-  static detectFileType(path) {
-    if (path.slice(-5) === '.json') return JSONBlob
-    return Blob
-  }
-
-  /**
-   * @public
-   */
-  async treeSHA() {
-    if (!this._cachedTreeSHA) {
-      const ref = await this.github.request(`/repos/${this.owner}/${this.repo}/git/refs/heads/${this.branch}`)
-      const commitSHA = get(ref, 'object.sha')
-      const commit = await this.github.request(`/repos/${this.owner}/${this.repo}/git/commits/${commitSHA}`)
-      this._cachedTreeSHA = get(commit, 'tree.sha')
-    }
-
-    return this._cachedTreeSHA
-  }
-
   /**
    * @public
    * @param {String} path
@@ -69,7 +27,6 @@ export default class Repo {
 
     // otherwise, fetch the blob
     const treeSHA = await this.treeSHA()
-    const level = path.split('/').length
     const tree = await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=${level}`)
     const finalBlob = {}
     {
