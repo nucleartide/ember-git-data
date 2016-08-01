@@ -139,5 +139,8 @@ test('more acceptance', async function(assert) {
     console.error(err.stack)
   }
 })
+
+test('even more acceptance', async function(assert) {
+})
 // jshint ignore:end
 
