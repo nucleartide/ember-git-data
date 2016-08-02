@@ -154,7 +154,11 @@ export default class Repo {
     if (!path) return
 
     // if the blob is in the read queue, remove and destroy
-    const blob = arrayRemove(this.readQueue, blob => blob.path === path)
+    const blob = arrayRemove(this.readQueue, blob => {
+      // if path is substring of blob.path, we're deleting the parent directory
+      const blobPathSubstring = blob.path.slice(0, path.length)
+      return path === blobPathSubstring
+    })
     if (blob) blob.destroy()
 
     // declare lots of variables we will need later

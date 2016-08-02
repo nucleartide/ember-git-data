@@ -188,5 +188,64 @@ test('commits update tree sha', async function(assert) {
   const newTreeSHA = await this.repo.treeSHA()
   assert.notEqual(newTreeSHA, oldTreeSHA)
 })
+
+test('more acceptance testing', async function(assert) {
+  assert.expect(0)
+
+  const actions = [
+    {
+      type: 'create',
+      file: 'file.txt',
+      updateTo: 'whoop',
+    },
+    {
+      type: 'delete',
+      file: 'package.json',
+    },
+    {
+      type: 'read',
+      file: 'package.py',
+      updateTo: 'whoop',
+    },
+    {
+      type: 'read',
+      file: 'machines/angelcity/base/machine.json',
+      updateTo: { jason: 'was here' },
+    },
+    {
+      type: 'delete',
+      file: 'machines/angelcity/base',
+    },
+    {
+      type: 'delete',
+      file: 'machines/munstersclassic',
+    },
+    {
+      type: 'read',
+      file: 'machines/wonderreel/20min/server.json',
+      updateTo: { jason: 'was here' },
+    }
+  ]
+
+  let file
+  for (const action of actions) {
+    switch (action.type) {
+    case 'create':
+      file = await this.repo.createFile(action.file)
+      if (action.updateTo) file.content = action.updateTo
+      break
+    case 'delete':
+      await this.repo.deleteFile(action.file)
+      break
+    case 'read':
+      file = await this.repo.readFile(action.file)
+      if (action.updateTo) file.content = action.updateTo
+      break
+    }
+  }
+
+  // rip
+  await this.repo.commit('godspeed')
+})
 // jshint ignore:end
 
