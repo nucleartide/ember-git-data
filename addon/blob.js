@@ -15,7 +15,7 @@ export class Blob {
   } = {}) {
     // returned by https://developer.github.com/v3/git/blobs/#get-a-blob
     this._content = content
-    this.originalContent = content
+    this._originalContent = content
     this.encoding = 'base64'
     this.url = url
     this.sha = sha
@@ -27,6 +27,10 @@ export class Blob {
 
     this.isDestroyed = false
     this.isDirty = isDirty
+  }
+
+  get originalContent() {
+    return b64DecodeUnicode(this._originalContent)
   }
 
   get content() {
@@ -69,6 +73,13 @@ export class JSONBlob extends Blob {
    */
   get content() {
     return JSON.parse(super.content)
+  }
+
+  /**
+   * @throws {SyntaxError}
+   */
+  get originalContent() {
+    return JSON.parse(super.originalContent)
   }
 
   set content(value) {
