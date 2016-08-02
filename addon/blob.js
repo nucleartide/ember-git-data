@@ -15,6 +15,7 @@ export class Blob {
   } = {}) {
     // returned by https://developer.github.com/v3/git/blobs/#get-a-blob
     this._content = content
+    this.originalContent = content
     this.encoding = 'base64'
     this.url = url
     this.sha = sha
