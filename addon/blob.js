@@ -25,7 +25,7 @@ export class Blob {
     this.mode = mode
 
     this.isDestroyed = false
-    this.isDirty = false
+    this.isDirty = isDirty
   }
 
   get content() {

@@ -170,6 +170,7 @@ test('empty files', async function(assert) {
   const oldTreeSHA = await this.repo.treeSHA()
 
   const emptyFile = await this.repo.createFile('empty.txt')
+  assert.ok(emptyFile.isDirty, 'empty file is dirty')
   await this.repo.commit('should have created empty file')
 
   const newTreeSHA = await this.repo.treeSHA()
