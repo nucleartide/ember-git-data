@@ -12,10 +12,22 @@ const {
 } = Ember
 
 moduleForAcceptance('Unit | Utility | repo', {
-  beforeEach() {
+  async beforeEach() {
+    // initialize github client
     this.github = this.application.__container__.lookup('service:github')
     set(this.github, 'token', ENV.githubAccessToken)
+
+    // create repo context
     this.repo = new Repo(this.github, 'RisingTideGames', 'slots-data-dev', 'master')
+
+    // reset repo state
+    await this.github.patch(`/repos/RisingTideGames/slots-data-dev/git/refs/heads/master`, {
+      contentType: 'application/json; charset=utf-8',
+      data: JSON.stringify({
+        sha: 'e8ede1bf0c6d9ea42adf0b6fd5a16016c4e6401f',
+        force: true
+      })
+    })
   },
 
   afterEach() {
@@ -141,6 +153,39 @@ test('more acceptance', async function(assert) {
 })
 
 test('even more acceptance', async function(assert) {
+  const garbageTxt = await this.repo.createFile('garbage.txt')
+  assert.equal(garbageTxt.content, '')
+  garbageTxt.content = 'something'
+
+  const packageJson = await this.repo.readFile('package.json')
+  assert.equal(packageJson.content.name, 'slots-data')
+  packageJson.content = { lost: 'the game' }
+
+  await this.repo.deleteFile('package.py')
+
+  await this.repo.commit('awwwwww yeah')
+})
+
+test('empty files', async function(assert) {
+  const oldTreeSHA = await this.repo.treeSHA()
+
+  const emptyFile = await this.repo.createFile('empty.txt')
+  await this.repo.commit('should have created empty file')
+
+  const newTreeSHA = await this.repo.treeSHA()
+  assert.notEqual(newTreeSHA, oldTreeSHA, 'tree should have been updated')
+})
+
+test('commits update tree sha', async function(assert) {
+  const oldTreeSHA = await this.repo.treeSHA()
+
+  const newFile = await this.repo.createFile('newfile.txt')
+  newFile.content = 'this is a file'
+
+  await this.repo.commit('create test file')
+
+  const newTreeSHA = await this.repo.treeSHA()
+  assert.notEqual(newTreeSHA, oldTreeSHA)
 })
 // jshint ignore:end
 

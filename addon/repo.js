@@ -53,7 +53,9 @@ export default class Repo {
   }
 
   /**
-   * @private
+   * TODO: make private
+   *
+   * @public
    * @return {String}
    */
   // jshint ignore:start
