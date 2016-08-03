@@ -247,5 +247,11 @@ test('more acceptance testing', async function(assert) {
   // rip
   await this.repo.commit('godspeed')
 })
+
+test('createFile when the file already exists', async function(assert) {
+  const indexFile = await this.repo.createFile('index.js')
+  const code = indexFile.content
+  assert.ok(code, 'has code')
+})
 // jshint ignore:end
 

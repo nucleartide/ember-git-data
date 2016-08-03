@@ -126,7 +126,15 @@ export default class Repo {
       const exists = Boolean(blob)
 
       // if the blob exists, return that blob
-      if (exists) return blob
+      if (exists) {
+        const obj = {}
+        const blobRes = await this.github.request(`/repos/${this.owner}/${this.repo}/git/blobs/${blob.sha}`)
+        merge(obj, blob)
+        merge(obj, blobRes)
+        const newBlob = new FileType(obj)
+        this.readQueue.push(newBlob)
+        return newBlob
+      }
 
       // otherwise, create the blob
       const newBlob = new FileType({ path, isDirty: true })
