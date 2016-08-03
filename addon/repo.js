@@ -370,7 +370,8 @@ export default class Repo {
       }
     }
 
-    this.readQueue.length = 0
+    // TODO: can't set this to zero, will break multiple commits
+    // this.readQueue.length = 0
 
     const commit = await this.github.post(`/repos/${this.owner}/${this.repo}/git/commits`, {
       contentType: 'application/json; charset=utf-8',

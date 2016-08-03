@@ -253,5 +253,16 @@ test('createFile when the file already exists', async function(assert) {
   const code = indexFile.content
   assert.ok(code, 'has code')
 })
+
+test('multiple commits', async function(assert) {
+  assert.expect(0)
+
+  const indexFile = await this.repo.readFile('index.js')
+  indexFile.content = 'test 1'
+  await this.repo.commit('first commit')
+
+  indexFile.content = 'test 2'
+  await this.repo.commit('second commit')
+})
 // jshint ignore:end
 
