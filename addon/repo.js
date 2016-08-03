@@ -388,5 +388,10 @@ export default class Repo {
       data: JSON.stringify({ sha: commit.sha })
     })
   }
+
+  async requestTree() {
+    const treeSHA = await this.treeSHA()
+    return await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
+  }
 }
 
