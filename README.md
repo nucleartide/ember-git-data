@@ -21,15 +21,25 @@ $ ember install ember-git-data
 
 ```js
 const repo = github.repo('nucleartide', 'ember-git-data', 'master')
+@@ this.store.setProperties({ owner, repo, branch })
 
 // create
 const readme = await repo.createFile('Readme.md')
+const path = 'machines/angelcity/base/machine.json'
+const readme = await this.store
+  .createRecord('github-file', { path })
+  .save() // WARNING: model content will get overwritten
+@@ const readme = await this.store.createFile('Readme.md')
 
 // read
 const packageJson = await repo.readFile('package.json')
+const path = 'machines/angelcity/base/machine.json'
+await this.store.queryRecord('github-file', { repo, path })
+@@ const readme = await this.store.readFile('Readme.md')
 
 // update a plain file
 readme.content = vaporize(readme.content) // ｖａｐｏｒｗａｖｅ
+@@ readme.set('content', { some: 'json object that will get serialized' })
 
 // update a JSON file
 const json = packageJson.content
@@ -38,9 +48,11 @@ packageJson.content = json
 
 // delete
 await repo.deleteFile('.travis.yml')
+@@ await readme.destroyRecord()
 
 // finally, commit
 await repo.commit('this is a commit message')
+@@ await this.store.commit('this is a commit message')
 ```
 
 ## Rationale
