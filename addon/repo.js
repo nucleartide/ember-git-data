@@ -126,7 +126,15 @@ export default class Repo {
       const exists = Boolean(blob)
 
       // if the blob exists, return that blob
-      if (exists) return blob
+      if (exists) {
+        const obj = {}
+        const blobRes = await this.github.request(`/repos/${this.owner}/${this.repo}/git/blobs/${blob.sha}`)
+        merge(obj, blob)
+        merge(obj, blobRes)
+        const newBlob = new FileType(obj)
+        this.readQueue.push(newBlob)
+        return newBlob
+      }
 
       // otherwise, create the blob
       const newBlob = new FileType({ path, isDirty: true })
@@ -362,7 +370,8 @@ export default class Repo {
       }
     }
 
-    this.readQueue.length = 0
+    // TODO: can't set this to zero, will break multiple commits
+    // this.readQueue.length = 0
 
     const commit = await this.github.post(`/repos/${this.owner}/${this.repo}/git/commits`, {
       contentType: 'application/json; charset=utf-8',
@@ -378,6 +387,11 @@ export default class Repo {
       contentType: 'application/json; charset=utf-8',
       data: JSON.stringify({ sha: commit.sha })
     })
+  }
+
+  async requestTree() {
+    const treeSHA = await this.treeSHA()
+    return await this.github.request(`/repos/${this.owner}/${this.repo}/git/trees/${treeSHA}?recursive=true`)
   }
 }
 
