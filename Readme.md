@@ -61,11 +61,20 @@ export default Ember.Route.extend({
     } catch (err) {
       // ...
     }
+  },
+
+  actions: {
+    doStuffWithRepo() {
+      const { repo } = this.modelFor(this.routeName)
+      // ...
+    }
   }
 })
 ```
 
-Note: the async/await syntax should "just work". (Open an issue if I'm wrong!)
+The Repo object is now cached while a user is visiting the route, and you can
+perform any actions you wish. (Also, the async/await syntax should "just work".
+(Open an issue if I'm wrong!)
 
 ## Rationale
 
