@@ -1,6 +1,7 @@
-import Ember from 'ember';
+
+import Ember from 'ember'
 import ENV from 'dummy/config/environment'
-import GitHub from 'git-data'
+
 const {
   inject: { service },
   get,
@@ -12,26 +13,22 @@ export default Ember.Route.extend({
 
   init() {
     this._super(...arguments)
-    console.log(GitHub)
+    const g = get(this, 'github')
+    const r = g.repo({
+      owner: 'RisingTideGames',
+      repo: 'slots-data-dev',
+      branch: 'master',
+      commitPrefix: '[tools]'
+    })
 
-//    // init github service
-//    const github = get(this, 'github')
-//    set(github, 'token', ENV.githubAccessToken)
-//
-//    const repo = github.repo('RisingTideGames', 'slots-data-dev', 'master')
-//    repo.readFile('package.json')
-//    .then(blob => {
-//      const json = blob.content
-//      json.hello = 'json i mean jason'
-//      blob.content = json
-//      // console.log(blob)
-//    })
-//    .catch(err => console.error(err.stack))
-//
-//    repo.deleteFile('machines/wordswithfriends/base/machine.json').then(() => {
-//      return repo.deleteFile('package.json')
-//    }).catch(err => {
-//      console.error(err.stack)
-//    })
+    r.readFile('package.json').then(blob => {
+      console.log(blob)
+      console.log(blob.content)
+    }).catch(err => console.error(err.stack))
+
+    r.deleteFile('something/that/does/not/exist.txt').catch(err => {
+      console.error(err.stack)
+    })
   }
-});
+})
+

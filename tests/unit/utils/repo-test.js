@@ -11,6 +11,10 @@ const {
   get,
 } = Ember
 
+/**
+ * TODO: migrate these tests to git-data.js
+ */
+
 moduleForAcceptance('Unit | Utility | repo', {
   async beforeEach() {
     // initialize github client
