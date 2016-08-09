@@ -33,7 +33,7 @@ export default GitHub.extend({
 ```
 
 You can now create as many [Repo][4] objects as you wish. Often, you will want
-to return the repo object as part of an Ember.Route's model hook:
+to return the Repo object as part of an Ember.Route's model hook:
 
 ```js
 // app/routes/index.js
@@ -55,15 +55,25 @@ export default Ember.Route.extend({
       branch: 'master',
     })
 
-    const packageJson = async repo.readFile('package.json')
-    return { packageJson, repo }
+    try {
+      const packageJson = async repo.readFile('package.json')
+      return { packageJson, repo }
+    } catch (err) {
+      // ...
+    }
   }
 })
 ```
 
-The async/await syntax should "just work". (Open an issue if I'm wrong!)
+Note: the async/await syntax should "just work". (Open an issue if I'm wrong!)
 
 ## Rationale
+
+#### Why not use Ember Data?
+
+Ember Data is great, and git-data.js could have easily been implemented as
+Ember Data models/adapters/serializers. I wanted to decouple git-data.js from
+Ember Data though, and make it usable in non-Ember environments.
 
 #### Why not extend [ember-data-github][3]?
 
