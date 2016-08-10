@@ -56,7 +56,7 @@ export default Ember.Route.extend({
     })
 
     try {
-      const packageJson = async repo.readFile('package.json')
+      const packageJson = await repo.readFile('package.json')
       return { packageJson, repo }
     } catch (err) {
       // ...
