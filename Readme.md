@@ -73,8 +73,17 @@ export default Ember.Route.extend({
 ```
 
 The Repo object is now cached while a user is visiting the route, and you can
-perform any actions you wish. (Also, the async/await syntax should "just work".
-Open an issue if I'm wrong!)
+perform any actions you wish.
+
+#### Async/Await Note
+
+The async/await syntax works with apps that **opt in** by setting the following in their `ember-cli-build.js`:
+
+```javascript
+babel: {
+  includePolyfill: true
+}
+```
 
 ## Rationale
 
