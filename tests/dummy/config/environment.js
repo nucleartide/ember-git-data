@@ -19,6 +19,11 @@ module.exports = function(environment) {
     }
   };
 
+  if (environment === 'development' || environment === 'test') {
+    if (!process.env.TOKEN) throw new Error('must pass in github access token')
+    ENV.githubAccessToken = process.env.TOKEN
+  }
+
   if (environment === 'development') {
     // ENV.APP.LOG_RESOLVER = true;
     // ENV.APP.LOG_ACTIVE_GENERATION = true;
